@@ -44,12 +44,12 @@ readWord :: Direction -> String -> Schema -> Match -> Maybe Match
 -- readWord dir w (r,c)  =
 readWord _ "" _ m = Just m
 readWord Nord (s:xs) schema ((r,c):xm)  = 
-  if r <= length xs then Nothing
+  if r <= length xs then Just [(1,1)] -- Nothing
   else
     case schemaValue schema (r,c) of
-      Nothing -> Nothing
+      Nothing -> Just [(2,2)] -- Nothing
       Just v -> 
-        if s /= v then Nothing
+        if s /= v then Just [(3,3)] -- Nothing
         else readWord Nord xs schema ((r-1,c):(r,c):xm )
 
 
