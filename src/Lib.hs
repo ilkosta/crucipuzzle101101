@@ -6,6 +6,7 @@ module Lib
     , Pos
     , Direction(..)
     , readWord
+    , canMove
     ) where
 
 someFunc :: IO ()
@@ -17,7 +18,7 @@ someFunc = putStrLn "ciao"
 Lo schema e' una matrice di lettere maiuscole o minuscole
 -}
 
-type Schema = [[Char]]
+type Schema = [String]
 type Pos = (Int,Int)
 type Key = [Pos]
 type Match = [Pos] -- sequenza di celle che coperte dalle lettere di una parola
@@ -33,6 +34,63 @@ data Direction =
   | Ovest
   | NordOvest
 
+
+type Distance = Int
+
+canMoveUp     :: Pos -> Distance -> Bool
+canMoveUp (0,_) _ = False
+canMoveUp (r,_) d = r >= d
+
+
+canMoveLeft   :: Pos -> Distance -> Bool
+canMoveLeft  (_,0) _ = False
+canMoveLeft  (_,c) d = c >= d
+
+
+canMoveDown   :: Pos -> Distance -> Schema -> Bool
+canMoveDown (r,_) d s 
+  | d == 0 = False
+  | length s > r = length s - r > d
+  | otherwise = False
+
+
+canMoveRight  :: Pos -> Distance -> Schema -> Bool
+canMoveRight (_,c) d s 
+  | d == 0 = False
+  | (length . head) s > c = (length . head) s - c > d
+  | otherwise = False
+
+
+
+canMove :: Pos -> Direction -> Distance -> Schema -> Bool
+canMove pos Nord dist _ = 
+  canMoveUp pos dist
+
+canMove pos NordEst dist schema = 
+  canMoveUp pos dist && canMoveRight pos dist schema
+
+canMove pos NordOvest dist _ =
+  canMoveUp pos dist && canMoveLeft pos dist
+
+canMove pos Sud dist schema = 
+  canMoveDown pos dist schema
+
+canMove pos SudEst dist schema = 
+  canMoveDown pos dist schema && canMoveRight pos dist schema
+
+canMove pos SudOvest dist schema =
+  canMoveDown pos dist schema && canMoveLeft pos dist
+
+canMove pos Est dist schema =
+  canMoveRight pos dist schema
+
+canMove pos Ovest dist _ =
+  canMoveLeft pos dist  
+
+
+
+
+
 {-| 
 f produce una lista di posizioni per tutte le parole
 -}
@@ -43,17 +101,45 @@ f produce una lista di posizioni per tutte le parole
 readWord :: Direction -> String -> Schema -> Match -> Maybe Match
 -- readWord dir w (r,c)  =
 readWord _ "" _ m = Just m
-readWord Nord (s:xs) schema ((r,c):xm)  = 
-  if r <= length xs then Just [(1,1)] -- Nothing
-  else
-    case schemaValue schema (r,c) of
-      Nothing -> Just [(2,2)] -- Nothing
-      Just v -> 
-        if s /= v then Just [(3,3)] -- Nothing
-        else readWord Nord xs schema ((r-1,c):(r,c):xm )
+
+-- quando arriva al singolo corattere della parola,
+-- versione specializzata per l'ultima riga
+readWord _ [s] schema ((r,c):xm) = 
+  case schemaValue schema (r,c) of
+    Nothing -> Nothing -- Just [(2,2)]
+    Just v -> 
+      if s /= v then Nothing -- Just [(7,7)]
+      else Just ((r,c):xm)
+
+readWord dir (s:xs) schema ((r,c):xm)  = 
+  let 
+    nm = nextPos dir (r,c):(r,c):xm
+  in
+    if canMove (r,c) dir (1 + length xs) schema
+    then
+      case schemaValue schema (r,c) of
+        Nothing -> Nothing -- Just [(2,2)]
+        Just v -> 
+          if s /= v then Nothing -- Just [(3,3)] 
+          else readWord dir xs schema nm
+    else Just [(0,0)] -- Nothing
+
+    
 
 
 -- readWord _ _ _ _ = Nothing -- FIXME: placeholder
+
+
+nextPos :: Direction -> Pos -> Pos
+nextPos Nord      (r,c) = (r-1,c)
+nextPos NordEst   (r,c) = (r-1,c+1)
+nextPos Est       (r,c) = (r,c+1)
+nextPos SudEst    (r,c) = (r+1,c+1)
+nextPos Sud       (r,c) = (r+1,c)
+nextPos SudOvest  (r,c) = (r+1,c-1)
+nextPos Ovest     (r,c) = (r,c-1)
+nextPos NordOvest (r,c) = (r-1,c-1)
+
 
 
 {-| nth : return the corresponding elment in a list -}
@@ -64,6 +150,10 @@ nth n (_:xs) =
   if n > length xs then Nothing -- opt
   else nth (n-1) xs
 
+
+
+{-| schemaValue evaluate to the value in the schema at the given position
+-}
 schemaValue :: Schema -> Pos -> Maybe Char
 schemaValue [] _ = Nothing
 schemaValue s (r,c) = 
