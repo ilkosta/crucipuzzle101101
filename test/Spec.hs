@@ -12,32 +12,33 @@ main = defaultMain tests
 tests :: TestTree
 tests = 
   testGroup "tests"
-  [ nthTest, schemaValueTest
+  [ schemaValueTest
   , canMoveTest
   , readWordTest
   , positionsTest
   , startingPositionsTests
-  , wordsPositionTests
-  , keyTests
+  , matchedWordsPosTests
+  -- , searchKeyTests
   ]
 
-keyTests :: TestTree
-keyTests = 
-  let
-    schema :: Schema
-    schema = 
-      [ [ 'c','o','s','i']
-      , [ 'c','i','a','o']
-      , [ 'c','o','s','i']
-      , [ 'c','i','a','o']
-      ]
-    words = [ "io", "iso", "osi"]
-  in
-    testCase "chiave" $
-      key schema words @?= [(0,0),(1,0),(1,2),(2,0),(3,0),(3,2)]
+-- searchKeyTests :: TestTree
+-- searchKeyTests = 
+--   let
+--     schema :: Schema
+--     schema = 
+--       [ [ 'c','o','s','i']
+--       , [ 'c','i','a','o']
+--       , [ 'c','o','s','i']
+--       , [ 'c','i','a','o']
+--       ]
+--     words = [ "io", "iso", "osi"]
+--   in
+--     testCase "chiave" $
+--       -- searchKey schema words @?= [(0,0),(1,0),(1,2),(2,0),(3,0),(3,2)]
+--       searchKey schema words @?= Key "abcd"
 
-wordsPositionTests :: TestTree
-wordsPositionTests =
+matchedWordsPosTests :: TestTree
+matchedWordsPosTests =
   let
     schema :: Schema
     schema = 
@@ -54,12 +55,13 @@ wordsPositionTests =
       ,((3,1),"io"),((3,1),"iso"),((3,3),"osi")]
   in
     testCase "posizioni delle parole" $
-      wordsPosition schema startingPos @?= 
-        [ (0,3),(0,2),(0,1) -- osi
-        , (1,3),(0,3) -- io
-        , (0,1),(0,2),(0,3) -- iso
-        , (0,1),(1,1),(2,1),(1,1),(3,3),(2,2),(1,1),(3,1),(2,2),(1,3),(2,3),(2,2),(2,1),(1,3),(2,3),(3,3),(2,3),(2,1),(2,2),(2,3),(2,1),(3,1),(1,3),(2,2),(3,1),(1,1),(2,2),(3,3)]
-
+      matchedWordsPos schema startingPos @?= 
+        [ ((0,3), "osi"),((0,2), "osi"),((0,1), "osi") -- osi
+        , ((1,3),"io"),((0,3),"io") -- io
+        , ((0,1),"iso"),((0,2),"iso"),((0,3),"iso") -- iso
+        , ((0,1),"io"),((1,1),"io"),((2,1),"io"),((1,1),"io"),((3,3),"iso"),((2,2),"iso"),((1,1),"iso"),((3,1),"osi"),((2,2),"osi"),((1,3),"osi"),((2,3),"osi"),((2,2),"osi"),((2,1),"osi"),((1,3),"io"),((2,3),"io"),((3,3),"io"),((2,3),"io"),((2,1),"iso"),((2,2),"iso"),((2,3),"iso"),((2,1),"io"),((3,1),"io"),((1,3),"iso"),((2,2),"iso"),((3,1),"iso"),((1,1),"osi"),((2,2),"osi"),((3,3),"osi")
+        ]
+        
         
 
 positionsTest :: TestTree
@@ -230,19 +232,6 @@ canMoveTest =
       ]
     ]
 
-nthTest :: TestTree
-nthTest = 
-  let 
-    l = ['1','2','3','4']
-  in
-    testGroup "verifica nth"
-    [ testCase "primo elemento se con indice 0" $
-        nth 0 l @?= Just '1'
-    , testCase "se non trovato torna Nothing" $
-        nth 10 l @?= Nothing
-    , testCase "estrae l'iesimo elmento" $
-        nth 1 l @?= Just '2'
-    ]
 
 schemaValueTest :: TestTree
 schemaValueTest =

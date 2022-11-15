@@ -25,20 +25,20 @@ data DataSource = Filename String
 
 
 
-insertSchema :: Schema -> String -> Schema
-insertSchema schema line 
-  | line == "." = schema
-  | otherwise   = -- divide per virgola o caratteri strani la riga ed inserisce le lettere in schema
-    splitWordsWhen ( == ',' || \x -> x `notElem` ['A'..'z']) : schema
+-- insertSchema :: Schema -> String -> Schema
+-- insertSchema schema line 
+--   | line == "." = schema
+--   | otherwise   = -- divide per virgola o caratteri strani la riga ed inserisce le lettere in schema
+--     splitWordsWhen (\x -> x == ',' || x `notElem` ['A'..'z']) : schema
 
 
-splitWordsWhen     :: (Char -> Bool) -> String -> [String]
-splitWordsWhen p s =  case dropWhile p s of
-                      "" -> []
-                      s' -> w : splitWordsWhen p s''
-                            where (w, s'') = break p s'
+-- splitWordsWhen     :: (Char -> Bool) -> String -> [String]
+-- splitWordsWhen p s =  case dropWhile p s of
+--                       "" -> []
+--                       s' -> w : splitWordsWhen p s''
+--                             where (w, s'') = break p s'
 
-readSchemaLine maxlen p chars line@(x:xs) 
-  | p x                   = putStrLn "?" -- schema non conforme alle regole: carattere non ammesso
-  | length chars > maxlen = putStrLn "?" -- schema non conforme alle regole: non rettangolare
-  | otherwise = readSchemaLine maxlen p x:chars xs
+-- readSchemaLine maxlen p chars line@(x:xs) 
+--   | p x                   = putStrLn "?" -- schema non conforme alle regole: carattere non ammesso
+--   | length chars > maxlen = putStrLn "?" -- schema non conforme alle regole: non rettangolare
+--   | otherwise = readSchemaLine maxlen p x:chars xs

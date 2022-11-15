@@ -1,7 +1,5 @@
 module Lib
-    ( someFunc
-    , nth
-    , at
+    ( at
     , Schema
     , Pos
     , Direction(..)
@@ -9,11 +7,13 @@ module Lib
     , canMove
     , positions
     , startingPositions
-    , wordsPosition
-    , key
+    , matchedWordsPos
+    , searchKey
+    , Result(..)
     ) where
 
 import Data.List
+import Data.Maybe
 
 {-| Schema
 
@@ -106,7 +106,6 @@ canMove pos Ovest dist _ =
   canMoveLeft pos dist  
 
 readWord :: Direction -> String -> Schema -> Match -> Match
--- readWord dir w (r,c)  =
 readWord _ "" _ m = m
 
 -- quando arriva al singolo corattere della parola,
@@ -134,16 +133,12 @@ readWord dir (s:xs) schema ((r,c):xm)  =
 
 {-| enumera tutte le posizioni che compongono lo schema -}
 positions schema = 
-  let 
-    generateCols r = 
-      case nth r schema of
-        Nothing -> [-1]   -- FIXME : error
-        Just l  -> [0..length l-1]
-  in      
-    [ (r,c) 
-      | r <- [ 0..length schema-1 ]
-      , c <- generateCols r
-    ]
+  [ (r,c) 
+    | r <- [ 0..length schema -1 ]
+    , c <- [ 0..length (schema !! r) -1]
+  ]
+
+
 
 {-| fornisce l'elenco di ciascuna posizione da cui possono partire le parole dell'elenco
     nella forma (posizione, parola)
@@ -155,11 +150,13 @@ startingPositions schema words =
   , (pos,w) <- [ (pos,w) | w <- words, schema `at` pos == Just (head w) ]
   ]
 
+
+
 {-| elenca tutte le posizioni nello schema 
     coperte da parole dell'elenco
     ogni posizione con la parola di riferimento
 -}
-matchedWordsPos :: Schema -> [(Pos,String)] -> (Match, String)
+matchedWordsPos :: Schema -> [(Pos,String)] -> [(Pos, String)]
 matchedWordsPos schema pw =
     [ (m,w) -- matched positions/word
     | (pos,w) <- pw  -- for each word and it's starting position
@@ -175,13 +172,16 @@ searchKey :: Schema -> [String] -> Result
 searchKey schema words =
   let 
     sp = startingPositions schema words
-    wp' = wordsPosition schema sp
+    wp' = matchedWordsPos schema sp
     wp = map fst wp'
     missingWords =  words \\ map snd wp'
-    k = [ schema `at` p 
-        | p <- positions schema 
-        , p `notElem` wp
-        ]
+    k = map fromJust 
+        ( filter isJust 
+            [ schema `at` p 
+            | p <- positions schema 
+            , p `notElem` wp        
+            ]
+        )
   in
     result missingWords k
         
@@ -202,13 +202,13 @@ nextPos NordOvest (r,c) = (r-1,c-1)
 
 
 
-{-| nth : return the corresponding elment in a list -}
-nth :: Int -> [a] -> Maybe a
-nth 0 (x:_) = Just x
-nth _ [] = Nothing
-nth n (_:xs)  
-  | n > length xs = Nothing -- opt
-  | otherwise     = nth (n-1) xs
+-- {-| nth : return the corresponding elment in a list -}
+-- nth :: Int -> [a] -> Maybe a
+-- nth 0 (x:_) = Just x
+-- nth _ [] = Nothing
+-- nth n (_:xs)  
+--   | n > length xs = Nothing -- opt
+--   | otherwise     = nth (n-1) xs
 
 
 
@@ -216,10 +216,7 @@ nth n (_:xs)
 -}
 at :: Schema -> Pos -> Maybe Char
 at [] _ = Nothing
-at s (r,c) = 
-  let
-    row = nth r s
-  in
-    case row of 
-      Nothing -> Nothing
-      Just rw -> nth c rw
+at s (r,c) 
+  | r >= length s         = Nothing
+  | c >= length (s !! r)  = Nothing
+  | otherwise             = Just ((s !! r) !! c)
