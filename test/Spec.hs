@@ -20,6 +20,7 @@ tests =
   , matchedWordsPosTests
   -- , searchKeyTests
   , loadSchemaTest
+  , loadWordListTest
   ]
 
 loadSchemaTest :: TestTree
@@ -50,7 +51,44 @@ loadSchemaTest =
       "tentativo di inserire abd -> [abc]"
   ]
   
+loadWordListTest :: TestTree
+loadWordListTest =
+  let
+    terr (Res (NonCompliantList wl)) msg = assertBool "ok" True
+    terr (LoadedWords wl) msg = 
+      assertFailure $ msg ++ " : LoadedSchema " ++ show wl
+    terr (Res _ ) msg = 
+      assertFailure $ msg ++ " : generic Res"
 
+    tok (Res (NonCompliantList wl)) msg = 
+      assertFailure $ msg ++ " : NonCompliantList " ++ show wl
+    tok _ _ = assertBool "---" True
+
+    emptyWl = loadWordList (LoadedWords [])
+  in
+
+  testGroup "verifica del caricamento della wordlist" 
+  [ testCase "wordlist con caratteri non ammessi 1" $
+    terr (emptyWl "c1ao m0nd0" )
+      "tentativo di inserire `c1ao m0nd0` in []"
+  , testCase "wordlist con caratteri non ammessi 2" $
+    terr (emptyWl "ciao , mondo" )
+      "tentativo di inserire `ciao , mondo` in []"
+  , testCase "wordlist con caratteri non ammessi 3" $
+    terr (emptyWl "ciao, mondo" )
+      "tentativo di inserire `ciao, mondo` in []" 
+
+  ---- casi corretti
+  , testCase "wordlist con parole ripetute consentite" $
+    tok (emptyWl "questo pazzo pazzo mondo")
+      "tentativo di inserire `questo pazzo pazzo mondo` in []"
+  , testCase "wordlist corretta 1" $
+    tok (emptyWl "ciao mondo a b cd" )
+      "tentativo di inserire `ciao mondo a b cd` in []"
+  , testCase "wordlist corretta 2" $
+    tok (loadWordList (LoadedWords ["qui"]) "quo qua" )
+      "tentativo di inserire `quo qua` in [qui]"
+  ]
 
 -- searchKeyTests :: TestTree
 -- searchKeyTests = 

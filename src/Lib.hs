@@ -13,9 +13,10 @@ module Lib
     , loadWordList
     , Status(..)
     , Result(..)
+    , charSeq -- per debug
     ) where
 
-import Data.List((\\))
+import Data.List((\\), nub)
 import Data.Maybe
 
 {-| Schema
@@ -237,7 +238,7 @@ at s (r,c)
 
   ----
 charSeq :: [Char]
-charSeq = ['A'..'z']
+charSeq = ['A'..'Z'] ++ ['a'..'z']
 
 acceptableChar :: Char -> Bool
 acceptableChar c = c `elem` charSeq
@@ -246,7 +247,7 @@ string2charSeq :: [Char] -> [Char]
 string2charSeq s = [c | c <- s, acceptableChar c]
 
 notAcceptableStr :: [Char] -> Bool
-notAcceptableStr s = not (null (s \\ charSeq))
+notAcceptableStr s = not (null (nub s \\ charSeq))
 
 {-| permette l'inserimento itertivo di una riga di caratteri come riga dello schema
 -}
@@ -272,10 +273,12 @@ loadWordList (Res r) _ = Res r
 loadWordList (LoadedWords wl) line = 
   let 
     -- parole accettabili
-    wl' = [ w | w <- words line, null (w \\ charSeq) ]
+    wl' = 
+      [ w| w <- words line , null (nub w \\ charSeq) ]
+    -- wl' = [ w | w <- words line]
     allAcceptableWords = length (words line) == length wl'
   in
     if allAcceptableWords 
       then LoadedWords $ wl ++ wl'
-      else Res . NonCompliantList $ wl
+      else Res . NonCompliantList $ wl'
 loadWordList s _ = s      
