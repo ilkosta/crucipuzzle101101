@@ -19,7 +19,38 @@ tests =
   , startingPositionsTests
   , matchedWordsPosTests
   -- , searchKeyTests
+  , loadSchemaTest
   ]
+
+loadSchemaTest :: TestTree
+loadSchemaTest =
+  let
+    terr (Res (NonCompliantScheme s)) msg = assertBool "ok" True
+    terr (LoadedSchema s) msg = 
+      assertFailure $ msg ++ " : LoadedSchema " ++ show s
+    terr (Res _ ) msg = 
+      assertFailure $ msg ++ " : generic Res"
+
+    tok (Res (NonCompliantScheme s)) msg = 
+      assertFailure $ msg ++ " : NonCompliantScheme " ++ show s
+    tok _ _ = assertBool "---" True
+  in
+  testGroup "verifica dello schema" 
+  [ testCase "schema non rettangolo" $
+    terr (loadSchema (LoadedSchema ["abc"]) "abcd") 
+      "tentativo di inserire abcd -> [abc]"
+  , testCase "schema con caratteri non validi" $
+    terr (loadSchema (LoadedSchema ["abc"]) "ab.d") 
+      "tentativo di inserire ab.d -> [abc]"
+  , testCase "schema con caratteri non validi" $
+    terr (loadSchema (LoadedSchema ["abc"]) "ab1d") 
+      "tentativo di inserire ab1d -> [abc]"
+  , testCase "schema corretto" $
+    tok (loadSchema (LoadedSchema ["abd"]) "abc") 
+      "tentativo di inserire abd -> [abc]"
+  ]
+  
+
 
 -- searchKeyTests :: TestTree
 -- searchKeyTests = 

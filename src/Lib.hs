@@ -9,10 +9,13 @@ module Lib
     , startingPositions
     , matchedWordsPos
     , searchKey
+    , loadSchema
+    , loadWordList
+    , Status(..)
     , Result(..)
     ) where
 
-import Data.List
+import Data.List((\\))
 import Data.Maybe
 
 {-| Schema
@@ -26,9 +29,15 @@ type Key = [Pos]
 type Match = [Pos] -- sequenza di celle che coperte dalle lettere di una parola
 type Elenco = [String]
 
+data Status = 
+  LoadedSchema Schema
+  | LoadedWords [String]
+  | Res Result
+
+
 data Result =
-  NonCompliantScheme
-  | NonCompliantList 
+  NonCompliantScheme Schema
+  | NonCompliantList [String]
   | WordsAbsent Elenco
   | NoKey 
   | Key String
@@ -130,8 +139,12 @@ readWord dir (s:xs) schema ((r,c):xm)  =
           else readWord dir xs schema nm
     else [] -- Just [(0,0)] -- Nothing
 
+-- per il compilatore
+readWord _ _ _ _ = []
+
 
 {-| enumera tutte le posizioni che compongono lo schema -}
+positions :: Foldable t => [t a] -> [(Int, Int)]
 positions schema = 
   [ (r,c) 
     | r <- [ 0..length schema -1 ]
@@ -169,12 +182,12 @@ matchedWordsPos schema pw =
 {-| generate the results by searching each word in the schema
 -}
 searchKey :: Schema -> [String] -> Result
-searchKey schema words =
+searchKey schema wl =
   let 
-    sp = startingPositions schema words
+    sp = startingPositions schema wl
     wp' = matchedWordsPos schema sp
     wp = map fst wp'
-    missingWords =  words \\ map snd wp'
+    missingWords =  wl \\ map snd wp'
     k = map fromJust 
         ( filter isJust 
             [ schema `at` p 
@@ -184,7 +197,7 @@ searchKey schema words =
         )
   in
     result missingWords k
-        
+
 
 
 
@@ -220,3 +233,49 @@ at s (r,c)
   | r >= length s         = Nothing
   | c >= length (s !! r)  = Nothing
   | otherwise             = Just ((s !! r) !! c)
+
+
+  ----
+charSeq :: [Char]
+charSeq = ['A'..'z']
+
+acceptableChar :: Char -> Bool
+acceptableChar c = c `elem` charSeq
+
+string2charSeq :: [Char] -> [Char]
+string2charSeq s = [c | c <- s, acceptableChar c]
+
+notAcceptableStr :: [Char] -> Bool
+notAcceptableStr s = not (null (s \\ charSeq))
+
+{-| permette l'inserimento itertivo di una riga di caratteri come riga dello schema
+-}
+loadSchema :: Status -> String {- line -} -> Status
+loadSchema (Res r) _ = Res r
+loadSchema (LoadedSchema []) line
+  | notAcceptableStr line
+    = Res . NonCompliantScheme $ []
+  | otherwise 
+    = LoadedSchema [string2charSeq line]
+loadSchema (LoadedSchema s) line
+  | notAcceptableStr line
+    = Res . NonCompliantScheme $ s
+  | length (head s) == length line
+    = LoadedSchema $ line : s
+  | otherwise = Res . NonCompliantScheme $ s
+loadSchema s _ = s
+
+{-| permette l'inserimento iterativo di una riga contenente parole nella lista di parole
+-}
+loadWordList :: Status -> String {- line -} -> Status
+loadWordList (Res r) _ = Res r
+loadWordList (LoadedWords wl) line = 
+  let 
+    -- parole accettabili
+    wl' = [ w | w <- words line, null (w \\ charSeq) ]
+    allAcceptableWords = length (words line) == length wl'
+  in
+    if allAcceptableWords 
+      then LoadedWords $ wl ++ wl'
+      else Res . NonCompliantList $ wl
+loadWordList s _ = s      
