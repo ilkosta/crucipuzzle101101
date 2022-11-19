@@ -79,7 +79,7 @@ loadWordListTest =
       "tentativo di inserire `ciao, mondo` in []" 
 
   ---- casi corretti
-  , testCase "wordlist con parole ripetute consentite" $
+  ,  testCase "wordlist con parole ripetute consentite" $
     tok (emptyWl "questo pazzo pazzo mondo")
       "tentativo di inserire `questo pazzo pazzo mondo` in []"
   , testCase "wordlist corretta 1" $

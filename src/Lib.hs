@@ -251,20 +251,24 @@ notAcceptableStr s = not (null (nub s \\ charSeq))
 
 {-| permette l'inserimento itertivo di una riga di caratteri come riga dello schema
 -}
-loadSchema :: Status -> String {- line -} -> Status
-loadSchema (Res r) _ = Res r
-loadSchema (LoadedSchema []) line
+loadSchema :: String {- line -} -> Status -> Status
+loadSchema _ (Res r) = Res r
+loadSchema line (LoadedSchema [])
   | notAcceptableStr line
     = Res . NonCompliantScheme $ []
   | otherwise 
     = LoadedSchema [string2charSeq line]
-loadSchema (LoadedSchema s) line
+loadSchema line (LoadedSchema s)
   | notAcceptableStr line
     = Res . NonCompliantScheme $ s
   | length (head s) == length line
     = LoadedSchema $ line : s
   | otherwise = Res . NonCompliantScheme $ s
-loadSchema s _ = s
+loadSchema _ s = s
+
+
+
+
 
 {-| permette l'inserimento iterativo di una riga contenente parole nella lista di parole
 -}
@@ -279,6 +283,6 @@ loadWordList (LoadedWords wl) line =
     allAcceptableWords = length (words line) == length wl'
   in
     if allAcceptableWords 
-      then LoadedWords $ wl ++ wl'
+      then LoadedWords $ nub $ wl ++ wl'
       else Res . NonCompliantList $ wl'
 loadWordList s _ = s      

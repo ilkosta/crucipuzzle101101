@@ -2,47 +2,63 @@ module Main (main) where
 
 import Lib
 
--- from "Learn You a Haskell"
--- http://learnyouahaskell.com/input-and-output
-
 import System.Environment   
+import System.Exit
 import Data.List  
 
-main = do  
-    args <- getArgs                  -- IO [String]
-    progName <- getProgName          -- IO String
-    putStrLn "The arguments are:"  
-    mapM_ putStrLn args
-    putStrLn "The program name is:"  
-    putStrLn progName
-    putStrLn "Enter the schema one line at a time, enter `.` to finish"
-    status <- readSchema (LoadedSchema []) 
-    case status of
-      LoadedSchema schema -> do
-        putStrLn "inserisci ora l'elenco di parole separate da spazi"
-        status <- readWords (LoadedWords [])
-        case status of
-          LoadedWords wl ->
-            case searchKey schema wl of
-              Key k -> putStrLn k
-              WordsAbsent _ -> notifyErr "WordsAbsent"
-              NoKey -> notifyErr "NoKey"
-          Res _ -> notifyErr "Res wl"
-      Res _ -> notifyErr "Res schema"
 
-notifyErr s = putStrLn $ "?" ++ s
+main :: IO ()
+main = do
+  args <- getArgs
+  case args of
+    [ fs, fwl ] -> do
+      status <- foldr loadSchema (LoadedSchema []) 
+                  <$> lines 
+                  <$> readFile fs
+      case status of
+        Res _ -> notifyErr "Res schema"
+        LoadedSchema schema -> do          
+          status <- loadWordList (LoadedWords []) <$> readFile fwl
+          case status of
+            Res _ -> notifyErr "Res wl"
+            LoadedWords wl -> search schema wl
 
-data DataSource = Filename String 
-                  | UserInput
+    _ -> do
+      name <- getProgName
+      putStrLn $ "Ciao, il programma puo' essere invocato anche come: " ++ name ++ " file_schema file_words\n"
+      putStrLn "Enter the schema one line at a time, enter `.` to finish:"
+      status <- interactiveReadSchema (LoadedSchema []) 
+      case status of
+        Res _ -> notifyErr "Res schema"
+        LoadedSchema schema -> do
+          status <- interactiveReadWordList
+          case status of
+            Res _ -> notifyErr "Res wl"
+            LoadedWords wl -> search schema wl
+            
+        
 
-readSchema :: Status -> IO Status
-readSchema (LoadedSchema s) = do
+notifyErr s = die $ "? " ++ s
+
+search schema wl = 
+  case searchKey schema wl of
+    Key k -> putStrLn k 
+    WordsAbsent _ -> notifyErr "WordsAbsent"
+    NoKey -> notifyErr "NoKey"
+
+interactiveReadWordList = 
+  putStrLn "inserisci ora l'elenco di parole separate da spazi" >> 
+  readWords (LoadedWords [])
+
+
+interactiveReadSchema :: Status -> IO Status
+interactiveReadSchema (LoadedSchema s) = do
   line <- getLine
   if line == "."
     then return (LoadedSchema s)
-    else readSchema (loadSchema (LoadedSchema s) line)
+    else interactiveReadSchema (loadSchema line (LoadedSchema s) )
 
-readSchema s = return s
+interactiveReadSchema s = return s
 
 readWords :: Status -> IO Status
 readWords (LoadedWords wl) = 
