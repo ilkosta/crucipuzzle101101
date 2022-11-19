@@ -27,9 +27,18 @@ Lo schema e' una matrice di lettere maiuscole o minuscole
 type Schema = [String]
 type Pos = (Int,Int)
 type Key = [Pos]
-type Match = [Pos] -- sequenza di celle che coperte dalle lettere di una parola
+type Match = [Pos] -- sequenza di celle coperte dalle lettere di una parola
 type Elenco = [String]
 
+
+
+{-| lo stato complessivo del programma
+    in qualsiasi momento si guardi il programma (dopo la valutazione dei parametri)
+    si potra' trovarlo con 
+    - uno schema caricato (anche vuoto)
+    - l'elenco delle parole caricato
+    - con un risultato
+-}
 data Status = 
   LoadedSchema Schema
   | LoadedWords [String]
@@ -43,6 +52,10 @@ data Result =
   | NoKey 
   | Key String
 
+{-| costruisce il result partendo da
+    - lista delle parole mancanti nella matrice
+    - chiave estratta
+-}
 result :: [String] -> String -> Result
 result [] "" = NoKey
 result [] k = Key k
@@ -115,6 +128,16 @@ canMove pos Est dist schema =
 canMove pos Ovest dist _ =
   canMoveLeft pos dist  
 
+
+{-| readWord fornisce l'elenco delle posizioni coperte 
+    dalla parola nella direzione data
+
+    cerca ricorsivamente la singola parola nello schema cercando per
+    - direzione di lettura
+    - parte della parola da individuare ancora
+    - schema
+    - posizioni validate correttamenete fino ad ora
+-}
 readWord :: Direction -> String -> Schema -> Match -> Match
 readWord _ "" _ m = m
 
@@ -216,16 +239,6 @@ nextPos NordOvest (r,c) = (r-1,c-1)
 
 
 
--- {-| nth : return the corresponding elment in a list -}
--- nth :: Int -> [a] -> Maybe a
--- nth 0 (x:_) = Just x
--- nth _ [] = Nothing
--- nth n (_:xs)  
---   | n > length xs = Nothing -- opt
---   | otherwise     = nth (n-1) xs
-
-
-
 {-| at evaluate to the value in the schema at the given position
 -}
 at :: Schema -> Pos -> Maybe Char
@@ -253,17 +266,20 @@ notAcceptableStr s = not (null (nub s \\ charSeq))
 -}
 loadSchema :: String {- line -} -> Status -> Status
 loadSchema _ (Res r) = Res r
+
 loadSchema line (LoadedSchema [])
   | notAcceptableStr line
     = Res . NonCompliantScheme $ []
   | otherwise 
     = LoadedSchema [string2charSeq line]
+
 loadSchema line (LoadedSchema s)
   | notAcceptableStr line
     = Res . NonCompliantScheme $ s
   | length (head s) == length line
     = LoadedSchema $ line : s
   | otherwise = Res . NonCompliantScheme $ s
+
 loadSchema _ s = s
 
 
@@ -274,6 +290,7 @@ loadSchema _ s = s
 -}
 loadWordList :: Status -> String {- line -} -> Status
 loadWordList (Res r) _ = Res r
+
 loadWordList (LoadedWords wl) line = 
   let 
     -- parole accettabili
@@ -285,4 +302,5 @@ loadWordList (LoadedWords wl) line =
     if allAcceptableWords 
       then LoadedWords $ nub $ wl ++ wl'
       else Res . NonCompliantList $ wl'
+
 loadWordList s _ = s      

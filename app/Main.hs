@@ -6,15 +6,25 @@ import System.Environment
 import System.Exit
 import Data.List  
 
+{-| Crucipuzzle: 
+    givena a rectangular schema of  letters and a list of words
+    exclude all the letters from the schema that corresponds to words
+    end extract the key contained inside the schema
 
+
+    the program can start with 2 arguments indicating 
+    - the file containing the schema
+    - the file containing the words to search inside the schema  
+
+    or will ask the schema and the word list to the user interactively
+-}
 main :: IO ()
 main = do
   args <- getArgs
   case args of
+    -- schema and word list from files
     [ fs, fwl ] -> do
-      status <- foldr loadSchema (LoadedSchema []) 
-                  <$> lines 
-                  <$> readFile fs
+      status <- foldr loadSchema (LoadedSchema []) . lines <$> readFile fs
       case status of
         Res _ -> notifyErr "Res schema"
         LoadedSchema schema -> do          
@@ -22,7 +32,8 @@ main = do
           case status of
             Res _ -> notifyErr "Res wl"
             LoadedWords wl -> search schema wl
-
+    
+    -- interactivity version
     _ -> do
       name <- getProgName
       putStrLn $ "Ciao, il programma puo' essere invocato anche come: " ++ name ++ " file_schema file_words\n"
