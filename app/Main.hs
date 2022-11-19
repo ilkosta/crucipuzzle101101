@@ -26,11 +26,11 @@ main = do
     [ fs, fwl ] -> do
       status <- foldr loadSchema (LoadedSchema []) . lines <$> readFile fs
       case status of
-        Res _ -> notifyErr "Res schema"
+        Res _ -> notifyErr --"Res schema"
         LoadedSchema schema -> do          
           status <- loadWordList (LoadedWords []) <$> readFile fwl
           case status of
-            Res _ -> notifyErr "Res wl"
+            Res _ -> notifyErr --"Res wl"
             LoadedWords wl -> search schema wl
     
     -- interactivity version
@@ -40,22 +40,22 @@ main = do
       putStrLn "Enter the schema one line at a time, enter `.` to finish:"
       status <- interactiveReadSchema (LoadedSchema []) 
       case status of
-        Res _ -> notifyErr "Res schema"
+        Res _ -> notifyErr --"Res schema"
         LoadedSchema schema -> do
           status <- interactiveReadWordList
           case status of
-            Res _ -> notifyErr "Res wl"
+            Res _ -> notifyErr --"Res wl"
             LoadedWords wl -> search schema wl
             
         
 
-notifyErr s = die $ "? " ++ s
+notifyErr {-s-} = die "?" -- ++ s
 
 search schema wl = 
   case searchKey schema wl of
     Key k -> putStrLn k 
-    WordsAbsent _ -> notifyErr "WordsAbsent"
-    NoKey -> notifyErr "NoKey"
+    WordsAbsent _ -> notifyErr --"WordsAbsent"
+    NoKey -> notifyErr --"NoKey"
 
 interactiveReadWordList = 
   putStrLn "inserisci ora l'elenco di parole separate da spazi" >> 

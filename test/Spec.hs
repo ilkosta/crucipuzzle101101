@@ -38,16 +38,16 @@ loadSchemaTest =
   in
   testGroup "verifica dello schema" 
   [ testCase "schema non rettangolo" $
-    terr (loadSchema (LoadedSchema ["abc"]) "abcd") 
+    terr (loadSchema "abcd" $ LoadedSchema ["abc"]) 
       "tentativo di inserire abcd -> [abc]"
   , testCase "schema con caratteri non validi" $
-    terr (loadSchema (LoadedSchema ["abc"]) "ab.d") 
+    terr (loadSchema "ab.d" $ LoadedSchema ["abc"])  
       "tentativo di inserire ab.d -> [abc]"
   , testCase "schema con caratteri non validi" $
-    terr (loadSchema (LoadedSchema ["abc"]) "ab1d") 
+    terr (loadSchema "ab1d" $ LoadedSchema ["abc"])  
       "tentativo di inserire ab1d -> [abc]"
   , testCase "schema corretto" $
-    tok (loadSchema (LoadedSchema ["abd"]) "abc") 
+    tok (loadSchema "abc" $ LoadedSchema ["abd"]) 
       "tentativo di inserire abd -> [abc]"
   ]
   
