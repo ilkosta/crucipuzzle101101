@@ -26,7 +26,6 @@ Lo schema e' una matrice di lettere maiuscole o minuscole
 
 type Schema = [String]
 type Pos = (Int,Int)
-type Key = [Pos]
 type Match = [Pos] -- sequenza di celle coperte dalle lettere di una parola
 type Elenco = [String]
 

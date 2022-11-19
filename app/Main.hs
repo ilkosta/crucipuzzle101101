@@ -4,7 +4,7 @@ import Lib
 
 import System.Environment   
 import System.Exit
-import Data.List  
+-- import Data.List  
 
 {-| Crucipuzzle: 
     givena a rectangular schema of  letters and a list of words
@@ -32,6 +32,9 @@ main = do
           case status of
             Res _ -> notifyErr --"Res wl"
             LoadedWords wl -> search schema wl
+            _ -> notifyErr  -- superfluous, already managed ?
+        _ -> notifyErr  -- superfluous, already managed ?
+        
     
     -- interactivity version
     _ -> do
@@ -46,17 +49,22 @@ main = do
           case status of
             Res _ -> notifyErr --"Res wl"
             LoadedWords wl -> search schema wl
+            _ -> notifyErr  -- superfluous, already managed ?
+        _ -> notifyErr  -- superfluous, already managed ?
             
         
-
+notifyErr :: IO a
 notifyErr {-s-} = die "?" -- ++ s
 
+search :: Schema -> [String] -> IO ()
 search schema wl = 
   case searchKey schema wl of
     Key k -> putStrLn k 
     WordsAbsent _ -> notifyErr --"WordsAbsent"
     NoKey -> notifyErr --"NoKey"
+    _ -> notifyErr -- superfluous, because it is already managed
 
+interactiveReadWordList :: IO Status
 interactiveReadWordList = 
   putStrLn "inserisci ora l'elenco di parole separate da spazi" >> 
   readWords (LoadedWords [])
@@ -75,4 +83,5 @@ readWords :: Status -> IO Status
 readWords (LoadedWords wl) = 
   loadWordList (LoadedWords wl) <$> getLine
 
-readWord s = return s
+readWords (LoadedSchema s) = return $ LoadedSchema s
+readWords (Res r) = return $ Res r
