@@ -211,13 +211,12 @@ searchKey schema wl =
     wp' = matchedWordsPos schema sp
     wp = map fst wp'
     missingWords =  wl \\ map snd wp'
-    k = map fromJust 
-        ( filter isJust 
+    k = catMaybes
             [ schema `at` p 
             | p <- positions schema 
             , p `notElem` wp        
             ]
-        )
+
   in
     result missingWords k
 

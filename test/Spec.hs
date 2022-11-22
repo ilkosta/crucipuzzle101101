@@ -18,7 +18,7 @@ tests =
   , positionsTest
   , startingPositionsTests
   , matchedWordsPosTests
-  -- , searchKeyTests
+  , searchKeyTests
   , loadSchemaTest
   , loadWordListTest
   ]
@@ -90,21 +90,30 @@ loadWordListTest =
       "tentativo di inserire `quo qua` in [qui]"
   ]
 
--- searchKeyTests :: TestTree
--- searchKeyTests = 
---   let
---     schema :: Schema
---     schema = 
---       [ [ 'c','o','s','i']
---       , [ 'c','i','a','o']
---       , [ 'c','o','s','i']
---       , [ 'c','i','a','o']
---       ]
---     words = [ "io", "iso", "osi"]
---   in
---     testCase "chiave" $
---       -- searchKey schema words @?= [(0,0),(1,0),(1,2),(2,0),(3,0),(3,2)]
---       searchKey schema words @?= Key "abcd"
+searchKeyTests :: TestTree
+searchKeyTests = 
+  let
+    schema :: Schema
+    schema = 
+      [ [ 'c','o','s','i']
+      , [ 'c','i','a','o']
+      , [ 'c','o','s','i']
+      , [ 'c','i','a','o']
+      ]
+    words = [ "io", "iso", "osi"]
+
+    tok NoKey _ = assertFailure  " nokey"
+    tok (WordsAbsent _) _ = assertFailure  " word absent"
+    tok (NonCompliantList _) _ = assertFailure " NonCompliantList"
+    tok ( NonCompliantScheme _) _ = assertFailure " NonCompliantScheme"
+    tok (Key r) (Key k) = assertEqual "key" r k
+    tok _ _ = assertFailure "aiutooooo"
+  in
+    testCase "chiave" $
+      -- searchKey schema words @?= [(0,0),(1,0),(1,2),(2,0),(3,0),(3,2)]
+      tok (searchKey schema words) (Key "ccacca")
+
+
 
 matchedWordsPosTests :: TestTree
 matchedWordsPosTests =
