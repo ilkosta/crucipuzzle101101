@@ -13,11 +13,13 @@ module Lib
     , loadWordList
     , Status(..)
     , Result(..)
-    , charSeq -- per debug
+    -- , charSeq -- per debug
     ) where
 
 import Data.List((\\), nub)
 import Data.Maybe
+
+import Control.Parallel (par)
 
 {-| Schema
 
@@ -55,7 +57,9 @@ data Result =
     - lista delle parole mancanti nella matrice
     - chiave estratta
 -}
-result :: [String] -> String -> Result
+result :: [String] -- lista delle parole mancanti nella matrice
+  -> String -- chiave estratta 
+  -> Result
 result [] "" = NoKey
 result [] k = Key k
 result missingWords _ = WordsAbsent missingWords
@@ -197,7 +201,7 @@ matchedWordsPos schema pw =
     [ (m,w) -- matched positions/word
     | (pos,w) <- pw  -- for each word and it's starting position
     , d <- directions       -- for each direction
-    , m <- readWord d w schema [pos]  -- collect the matching positions if can read the word
+    , m <- [pos] `par` w `par` d `par` readWord d w schema [pos]  -- collect the matching positions if can read the word
     ]
 
 
@@ -210,7 +214,7 @@ searchKey schema wl =
     sp = startingPositions schema wl
     wp' = matchedWordsPos schema sp
     wp = map fst wp'
-    missingWords =  wl \\ map snd wp'
+    missingWords =  wl \\ map snd sp
     k = catMaybes
             [ schema `at` p 
             | p <- positions schema 
