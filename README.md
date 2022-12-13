@@ -22,8 +22,9 @@ E' disponibile una suite di test che possono essere lanciati con `stack test`.
 ## struttura del programma
 
 Il programma e' diviso in tre directory e tre file sorgente:
+
 - app/Main.hs : la parte che si occupa dell'avvio del programma e le funzioni che interagiscono con l'I/O
-- src/Lib.hs : l'insieme delle funzioni utilizzate da Main.hs che non hanno a che fare con l'I/O
+- src/Lib.hs : l'insieme delle funzioni pure utilizzate da Main.hs che non hanno a che fare con l'I/O
 - test/spec.hs : i test unitari per le funzioni contenute in Lib.hs
 
 ### strutture dati utilizzate
@@ -41,3 +42,13 @@ Il programma e' diviso in tre directory e tre file sorgente:
   - errore per alcune parole nell'elenco mancanti
   - errore per assenza della chiave
   - chiave
+
+### flusso del programma
+
+si carica lo schema, se questo e' corretto si procede con il caricamento dell'elenco di parole.
+Se anche l'elenco e' accettabile il programma:
+
+- percorre tutte le posizioni cercando da quali possono partire le parole dell'elenco (se alla posizione x,y corrisponde l'iniziale della parola) (in `startingPositions`)
+- per ogni posizione individuata cerca in tutte le direzioni se lo schema contiene la parola che inizia a quella posizione, registrando le posizioni coperte dalla parola (in `readWord`)
+- verifica che non ci siano parole nell'elenco che non sono state trovate (in `searchkey`)
+- estrae le lettere non coperte da nessuna parola (chiave) (in `searchkey`)
