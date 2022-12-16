@@ -1,3 +1,5 @@
+-- {-# LANGUAGE ParallelListComp #-}
+
 module Lib
   ( at,
     Schema,
@@ -17,9 +19,12 @@ module Lib
   )
 where
 
-import Control.Parallel (par)
+-- import Control.Parallel (par)
+import Control.Parallel.Strategies (using,parList,rdeepseq )
 import Data.List (nub, (\\))
 import Data.Maybe
+
+-- Use ParallelListComp
 
 -- | Schema
 --
@@ -117,6 +122,7 @@ canMove pos Est dist schema =
 canMove pos Ovest dist _ =
   canMoveLeft pos dist
 
+
 -- | readWord fornisce l'elenco delle posizioni coperte
 --    dalla parola nella direzione data
 --
@@ -167,6 +173,7 @@ positions schema =
       c <- [0 .. length (schema !! r) - 1]
   ]
 
+
 -- | fornisce l'elenco di ciascuna posizione da cui possono partire le parole dell'elenco
 --    nella forma (posizione, parola)
 startingPositions :: Schema -> Elenco -> [(Pos, String)]
@@ -175,7 +182,8 @@ startingPositions schema words =
     | w <- words
     , pos <- positions schema    
     , schema `at` pos == Just (head w)
-  ]
+  ] -- `using` parList rdeepseq
+  
 
 -- | elenca tutte le posizioni nello schema
 --    coperte da parole dell'elenco
@@ -184,26 +192,30 @@ matchedWordsPos :: Schema -- schema
   -> [(Pos, String)] -- starting word position
   -> [(Pos, String)] -- posizioni ricoperte dalla parola corrispondente
 matchedWordsPos schema pw =
-  [ m `par` (m, w) -- matched position/word
+  [ (m, w) -- matched position/word
     | (pos, w) <- pw, -- for each word and it's starting position
       d <- directions, -- for each direction
       m <- readWord d w schema [pos] -- collect the matching positions if can read the word
-  ]
+  ] `using` parList rdeepseq
 
 -- | generate the results by searching each word in the schema
 searchKey :: Schema -> [String] -> Result
 searchKey schema wl =
-  let sp = startingPositions schema wl
-      wp' = matchedWordsPos schema sp 
-      wp = map fst wp'
-      missingWords = wl \\ map snd sp
+  let 
+      sp = startingPositions schema wl
+      wpw = matchedWordsPos schema sp
+
+      wp = map fst wpw
+
+      missingWords = wl \\ (nub.map snd) wpw
       k =
         catMaybes
           [ schema `at` p
             | p <- positions schema,
               p `notElem` wp
           ]
-   in result missingWords k
+  in 
+  result missingWords k
 
 nextPos :: Direction -> Pos -> Pos
 nextPos Nord (r, c) = (r - 1, c)

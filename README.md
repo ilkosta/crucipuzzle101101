@@ -55,8 +55,8 @@ Se anche l'elenco e' accettabile il programma:
 
 ### accorgimenti utilizzati - librerie
 
-Come ottimizzazione dell'algoritmo e' stato introdotto un parallelismo semi esplicito tramite l'uso degli `spark` (spark computation) generati da `par` del modulo `Control.Parallel`.
+Come ottimizzazione dell'algoritmo e' stato introdotto un parallelismo semi esplicito tramite l'uso degli `spark` (spark computation) generati tramite una strategia di esecuzione che disaccoppia la funzione dal modo in cui viene valutata.
 
-La concorrenza e' quindi ottenuta generando thread creati implicitamente.
+La concorrenza e' quindi ottenuta proponendo la creazione di thread.
 
 Ad esempio lanciando l'esecuzione con `stack run -- schema.txt elenco.txt +RTS -N4 -s ` si ottiene l'evidenza dell'esecuzione parallela.
