@@ -125,10 +125,18 @@ canMove pos Ovest dist _ =
 --    - parte della parola da individuare ancora
 --    - schema
 --    - posizioni validate correttamenete fino ad ora
-readWord :: Direction -> String -> Schema -> Match -> Match
+readWord 
+  :: Direction -- direzione di lettura
+  -> String -- parte della parola da individuare ancora
+  -> Schema -- schema 
+  -> Match -- posizioni validate correttamenete fino ad ora 
+  -> Match -- posizioni della parola nello schema
+
+-- success case
 readWord _ "" _ m = m
+
 -- quando arriva al singolo corattere della parola,
--- versione specializzata per l'ultima riga
+-- versione specializzata per l'ultima lettera
 readWord _ [s] schema ((r, c) : xm) =
   case schema `at` (r, c) of
     Nothing -> [] -- Just [(2,2)] -- Nothing --
@@ -136,6 +144,7 @@ readWord _ [s] schema ((r, c) : xm) =
       if s /= v
         then [] -- Just [(7,7)] -- Nothing --
         else (r, c) : xm
+
 readWord dir (s : xs) schema ((r, c) : xm) =
   let nm = nextPos dir (r, c) : (r, c) : xm
    in if canMove (r, c) dir (length xs) schema
@@ -174,17 +183,17 @@ matchedWordsPos :: Schema -- schema
   -> [(Pos, String)] -- starting word position
   -> [(Pos, String)] -- posizioni ricoperte dalla parola corrispondente
 matchedWordsPos schema pw =
-  [ (m, w) -- matched position/word
+  [ m `par` (m, w) -- matched position/word
     | (pos, w) <- pw, -- for each word and it's starting position
       d <- directions, -- for each direction
-      m <- pos `par` w `par` d `par` readWord d w schema [pos] -- collect the matching positions if can read the word
+      m <- readWord d w schema [pos] -- collect the matching positions if can read the word
   ]
 
 -- | generate the results by searching each word in the schema
 searchKey :: Schema -> [String] -> Result
 searchKey schema wl =
   let sp = startingPositions schema wl
-      wp' = matchedWordsPos schema sp
+      wp' = matchedWordsPos schema sp 
       wp = map fst wp'
       missingWords = wl \\ map snd sp
       k =
