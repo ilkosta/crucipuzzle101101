@@ -172,8 +172,8 @@ positions schema =
 startingPositions :: Schema -> Elenco -> [(Pos, String)]
 startingPositions schema words =
   [ (pos, w)
-    | pos <- positions schema
-    , w <- words
+    | w <- words
+    , pos <- positions schema    
     , schema `at` pos == Just (head w)
   ]
 
