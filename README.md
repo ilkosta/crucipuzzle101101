@@ -49,6 +49,14 @@ si carica lo schema, se questo e' corretto si procede con il caricamento dell'el
 Se anche l'elenco e' accettabile il programma:
 
 - percorre tutte le posizioni cercando da quali possono partire le parole dell'elenco (se alla posizione x,y corrisponde l'iniziale della parola) (in `startingPositions`)
-- per ogni posizione individuata cerca in tutte le direzioni se lo schema contiene la parola che inizia a quella posizione, registrando le posizioni coperte dalla parola (in `readWord`)
+- per ogni posizione individuata cerca, possibilmente in parallelo, in tutte le direzioni se lo schema contiene la parola che inizia a quella posizione, registrando le posizioni coperte dalla parola (in `readWord`)
 - verifica che non ci siano parole nell'elenco che non sono state trovate (in `searchkey`)
 - estrae le lettere non coperte da nessuna parola (chiave) (in `searchkey`)
+
+### accorgimenti utilizzati - librerie
+
+Come ottimizzazione dell'algoritmo e' stato introdotto un parallelismo semi esplicito tramite l'uso degli `spark` (spark computation) generati da `par` del modulo `Control.Parallel`.
+
+La concorrenza e' quindi ottenuta generando thread creati implicitamente.
+
+Ad esempio lanciando l'esecuzione con `stack run -- schema.txt elenco.txt +RTS -N4 -s ` si ottiene l'evidenza dell'esecuzione parallela.
