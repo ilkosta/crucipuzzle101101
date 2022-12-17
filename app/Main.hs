@@ -26,14 +26,14 @@ main = do
     [ fs, fwl ] -> do
       status <- foldr loadSchema (LoadedSchema []) . lines <$> readFile fs
       case status of
-        Res _ -> notifyErr --"Res schema"
+        Res _ -> notifyErr -- "Res schema"
         LoadedSchema schema -> do          
           status <- loadWordList (LoadedWords []) <$> readFile fwl
           case status of
-            Res _ -> notifyErr --"Res wl"
+            Res _ -> notifyErr -- "Res wl"
             LoadedWords wl -> search schema wl
-            _ -> notifyErr  -- superfluous, already managed ?
-        _ -> notifyErr  -- superfluous, already managed ?
+            _ -> notifyErr -- "" -- superfluous, already managed ?
+        _ -> notifyErr  -- "" -- superfluous, already managed ?
         
     
     -- interactivity version
@@ -43,26 +43,27 @@ main = do
       putStrLn "Enter the schema one line at a time, enter `.` to finish:"
       status <- interactiveReadSchema (LoadedSchema []) 
       case status of
-        Res _ -> notifyErr --"Res schema"
+        Res _ -> notifyErr -- "Res schema"
         LoadedSchema schema -> do
           status <- interactiveReadWordList
           case status of
-            Res _ -> notifyErr --"Res wl"
+            Res _ -> notifyErr --  "Res wl"
             LoadedWords wl -> search schema wl
-            _ -> notifyErr  -- superfluous, already managed ?
-        _ -> notifyErr  -- superfluous, already managed ?
+            _ -> notifyErr -- "" -- superfluous, already managed ?
+        _ -> notifyErr -- "" -- superfluous, already managed ?
             
         
 notifyErr :: IO a
-notifyErr {-s-} = die "?" -- ++ s
+-- notifyErr :: String -> IO a
+notifyErr {- s -} = die $ "?" -- ++ s
 
 search :: Schema -> [String] -> IO ()
 search schema wl = 
   case searchKey schema wl of
     Key k -> putStrLn k 
-    WordsAbsent _ -> notifyErr --"WordsAbsent"
-    NoKey -> notifyErr --"NoKey"
-    _ -> notifyErr -- superfluous, because it is already managed
+    WordsAbsent wm -> notifyErr -- ("WordsAbsent " ++ foldr (\f s -> f ++ "," ++ s) "" wm)
+    NoKey -> notifyErr -- "NoKey"
+    _ -> notifyErr -- "" -- superfluous, because it is already managed
 
 interactiveReadWordList :: IO Status
 interactiveReadWordList = 

@@ -45,7 +45,9 @@ Il programma e' diviso in tre directory e tre file sorgente:
 
 ### flusso del programma
 
-si carica lo schema, se questo e' corretto si procede con il caricamento dell'elenco di parole.
+La soluzione e' stata individuata utilizzando il principio di moltiplicazione.
+
+Si carica lo schema, se questo e' corretto si procede con il caricamento dell'elenco di parole.
 Se anche l'elenco e' accettabile il programma:
 
 - percorre tutte le posizioni cercando da quali possono partire le parole dell'elenco (se alla posizione x,y corrisponde l'iniziale della parola) (in `startingPositions`)
@@ -59,4 +61,5 @@ Come ottimizzazione dell'algoritmo e' stato introdotto un parallelismo semi espl
 
 La concorrenza e' quindi ottenuta proponendo la creazione di thread.
 
-Ad esempio lanciando l'esecuzione con `stack run -- schema.txt elenco.txt +RTS -N4 -s ` si ottiene l'evidenza dell'esecuzione parallela.
+Ad esempio lanciando l'esecuzione con `stack run -- schema.txt elenco.txt +RTS -N4 -s ` si ottiene l'evidenza dell'esecuzione parallela, che viene ignorata se lo spazio del problema e' piccolo.
+
