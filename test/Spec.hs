@@ -2,6 +2,7 @@ module Main (main) where
 
 import Test.Tasty
 import Test.Tasty.HUnit
+import Data.List (sortBy)
 import Lib
 
 main :: IO ()
@@ -347,10 +348,20 @@ startingPositionsTests =
       , [ 'c','i','a','o']
       ]
     words = [ "io", "iso", "cis", "osi", "si" ]
+
+    compareRes :: ((Int, Int), String) -> ((Int, Int), String) -> Ordering
+    compareRes a b 
+      | fst (fst a) == fst ( fst b) =  
+        if snd ( fst a) == snd ( fst b)
+          then compare (snd a) (snd b)
+          else compare (snd ( fst a)) (snd ( fst b))
+      | otherwise = compare (fst ( fst a)) (fst ( fst b))
+
+    ordRes = sortBy compareRes
   in
     testCase "individuazione delle possibili posizioni di partenza delle parole" $
-      startingPositions schema words @?= 
-        [((0,0),"cis"),((0,1),"osi"),((0,2),"si"),((0,3),"io")
+      ordRes (startingPositions schema words) @?= 
+        ordRes [((0,0),"cis"),((0,1),"osi"),((0,2),"si"),((0,3),"io")
         ,((0,3),"iso"),((1,0),"cis"),((1,1),"io"),((1,1),"iso")
         ,((1,3),"osi"),((2,0),"cis"),((2,1),"osi"),((2,2),"si")
         ,((2,3),"io"),((2,3),"iso"),((3,0),"cis"),((3,1),"io")
